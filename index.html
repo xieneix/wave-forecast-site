@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>中国海域有义波高预测系统</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIINfQhKQr0KHQ3Pn5ZHDBlGksYmw5rY2zQ="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#overview" aria-label="中国海域有义波高预测系统">
+          <span class="brand-mark"></span>
+          <span>
+            <strong>中国海域有义波高预测系统</strong>
+            <small>ERA5 · Decomposition · Deep Forecast</small>
+          </span>
+        </a>
+        <nav class="nav-tabs" aria-label="页面导航">
+          <a class="active" href="#overview">总览</a>
+          <a href="#map">海域地图</a>
+          <a href="#pipeline">自动更新</a>
+          <a href="#models">模型状态</a>
+        </nav>
+        <div class="sync-pill" aria-label="数据更新状态">
+          <span></span>
+          更新时间 --
+        </div>
+      </header>
+
+      <main>
+        <section id="overview" class="snap-section hero-overview reveal-section is-visible" aria-label="系统总览">
+          <div class="hero-copy">
+            <p class="eyebrow">Operational Wave Height Forecast</p>
+            <h1>中国海域有义波高预测系统</h1>
+            <p class="lead">
+              每日接入 ERA5 最新可用海浪数据，沿用训练期最优分解方案、时间窗与深度学习模型，生成未来 48 / 72 / 96 小时有义波高预测。
+            </p>
+            <div class="metric-strip" aria-label="总体指标">
+              <div>
+                <small>覆盖海域</small>
+                <strong>4</strong>
+              </div>
+              <div>
+                <small>最短更新</small>
+                <strong>24h</strong>
+              </div>
+              <div>
+                <small>预测时效</small>
+                <strong>48/72/96h</strong>
+              </div>
+            </div>
+          </div>
+          <a class="scroll-cue" href="#map" aria-label="滚动到海域地图">
+            <span></span>
+            海域地图
+          </a>
+        </section>
+
+        <section id="map" class="snap-section map-section reveal-section" aria-label="中国近海地图与预测">
+          <div class="section-heading map-heading">
+            <div>
+              <small>Interactive Coastal Map</small>
+              <h2>选择真实海域点位</h2>
+            </div>
+            <p>拖拽平移、左侧按钮缩放。点击任一海域点位后，地图会收至左侧，右侧展开预测结果。</p>
+          </div>
+
+          <div class="map-experience" id="mapExperience">
+            <div class="map-panel" aria-label="中国近海真实交互地图">
+              <div id="realMap" class="real-map" role="application" aria-label="可缩放的中国沿海地图"></div>
+              <div class="map-toolbar" aria-label="地图底图切换">
+                <button class="active" type="button" data-layer="street">海洋</button>
+                <button type="button" data-layer="satellite">卫星</button>
+              </div>
+              <div class="map-caption">
+                <strong>四海域代表预测点</strong>
+                <span>拖拽平移 · 左侧按钮缩放 · 点击点位</span>
+              </div>
+              <aside class="hover-card" aria-live="polite">
+                <img id="hoverImage" alt="" />
+                <div>
+                  <small id="hoverTag"></small>
+                  <strong id="hoverTitle"></strong>
+                  <p id="hoverText"></p>
+                </div>
+              </aside>
+            </div>
+
+            <aside class="prediction-drawer" aria-label="选中海域预测详情">
+              <article class="sea-profile">
+                <img id="profileImage" alt="" />
+                <div class="profile-copy">
+                  <small id="seaRegion"></small>
+                  <h2 id="seaTitle"></h2>
+                  <p id="seaDescription"></p>
+                  <div class="model-pills" aria-label="模型配置">
+                    <span id="seaDecomp"></span>
+                    <span id="seaModel"></span>
+                    <span id="seaWindow"></span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="forecast-panel">
+                <div class="panel-heading">
+                  <div>
+                    <small>Forecast Result</small>
+                    <h2 id="forecastTitle"></h2>
+                  </div>
+                  <div class="horizon-toggle" role="tablist" aria-label="预测时效">
+                    <button type="button" data-horizon="48" role="tab" aria-selected="false">48h</button>
+                    <button class="active" type="button" data-horizon="72" role="tab" aria-selected="true">72h</button>
+                    <button type="button" data-horizon="96" role="tab" aria-selected="false">96h</button>
+                  </div>
+                </div>
+
+                <div class="chart-wrap">
+                  <svg id="forecastChart" viewBox="0 0 760 320" role="img" aria-label="未来波高预测曲线"></svg>
+                </div>
+
+                <div class="forecast-stats" aria-label="预测摘要">
+                  <div>
+                    <small>峰值波高</small>
+                    <strong id="peakValue"></strong>
+                  </div>
+                  <div>
+                    <small>峰值时间</small>
+                    <strong id="peakTime"></strong>
+                  </div>
+                  <div>
+                    <small>风险等级</small>
+                    <strong id="riskValue"></strong>
+                  </div>
+                </div>
+              </article>
+            </aside>
+          </div>
+        </section>
+
+        <section id="pipeline" class="snap-section pipeline-band reveal-section" aria-label="自动化流程">
+          <div class="section-heading">
+            <div>
+              <small>Daily Automation</small>
+              <h2>从 ERA5 到结果图的每日流水线</h2>
+            </div>
+          </div>
+          <div class="pipeline-steps">
+            <article>
+              <span>01</span>
+              <h3>下载</h3>
+              <p>按四海域坐标范围拉取 ERA5 最新可用有义波高数据。</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>更新</h3>
+              <p>追加至本地历史序列，并执行缺测、时间索引与范围检查。</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>分解</h3>
+              <p>使用训练时一致的 EMD / VMD 年份窗口与参数。</p>
+            </article>
+            <article>
+              <span>04</span>
+              <h3>预测</h3>
+              <p>加载各海域最佳深度学习权重，直接推理并生成图件。</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="models" class="snap-section model-board reveal-section" aria-label="模型状态">
+          <div class="section-heading">
+            <div>
+              <small>Model Registry</small>
+              <h2>各海域当前线上模型</h2>
+            </div>
+          </div>
+          <div class="model-list" id="modelList"></div>
+        </section>
+      </main>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="./data/runtime-data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
