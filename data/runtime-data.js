@@ -1,5 +1,5 @@
 window.WAVE_RUNTIME_DATA = {
-  "generatedAt": "2026-05-13T21:18:12",
+  "generatedAt": "2026-05-10T00:00:00",
   "registry": {
     "schema_version": 1,
     "selection_rule": "min metrics.mape_test, fallback metrics.best_val_mape, fallback val_metrics.val_mape",
